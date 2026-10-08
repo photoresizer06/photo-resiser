@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Free Photo Resizer - Resize Images Online</title>
+
+<meta name="description"
+content="Resize your photos online for free. Change image width, height, format and quality without uploading your photos.">
+
+<style>
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f4f7fb;
+    color: #222;
+}
+
+header {
+    background: #2563eb;
+    color: white;
+    text-align: center;
+    padding: 30px 15px;
+}
+
+header h1 {
+    margin: 0 0 10px;
+    font-size: 32px;
+}
+
+header p {
+    margin: 0;
+    font-size: 17px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 30px auto;
+    padding: 20px;
+}
+
+.card {
+    background: white;
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.08);
+}
+
+.upload-box {
+    border: 2px dashed #2563eb;
+    border-radius: 12px;
+    padding: 40px 20px;
+    text-align: center;
+    cursor: pointer;
+    background: #f8fbff;
+}
+
+.upload-box:hover {
+    background: #eef5ff;
+}
+
+.upload-box input {
+    display: none;
+}
+
+.preview {
+    text-align: center;
+    margin-top: 25px;
+}
+
+.preview img {
+    max-width: 100%;
+    max-height: 350px;
+    border-radius: 10px;
+}
+
+.controls {
+    margin-top: 25px;
+}
+
+.row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.field {
+    flex: 1;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+
+input, select {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.checkbox {
+    margin: 15px 0;
+}
+
+button {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    font-size: 17px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.download {
+    margin-top: 12px;
+    background: #16a34a;
+}
+
+.download:hover {
+    background: #15803d;
+}
+
+.info {
+    margin-top: 25px;
+    padding: 15px;
+    background: #f1f5f9;
+    border-radius: 10px;
+    text-align: center;
+}
+
+footer {
+    text-align: center;
+    padding: 25px;
+    color: #666;
+}
+
+@media (max-width: 600px) {
+    .row {
+        flex-direction: column;
+    }
+
+    header h1 {
+        font-size: 25px;
+    }
+
+    .container {
+        padding: 10px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+    <h1>Free Photo Resizer</h1>
+    <p>Resize your images online quickly and easily</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+
+    <label class="upload-box">
+        <strong>📷 Click to Upload Photo</strong>
+        <br><br>
+        Choose an image from your device
+        <input type="file" id="imageInput" accept="image/*">
+    </label>
+
+    <div class="preview">
+        <img id="previewImage" style="display:none;">
+    </div>
+
+    <div class="controls">
+
+        <div class="row">
+
+            <div class="field">
+                <label>Width (px)</label>
+                <input type="number" id="width">
+            </div>
+
+            <div class="field">
+                <label>Height (px)</label>
+                <input type="number" id="height">
+            </div>
+
+        </div>
+
+        <div class="checkbox">
+            <label>
+                <input type="checkbox" id="aspectRatio" checked>
+                Keep Aspect Ratio
+            </label>
+        </div>
+
+        <div class="row">
+
+            <div class="field">
+                <label>Image Format</label>
+
+                <select id="format">
+                    <option value="image/jpeg">JPG</option>
+                    <option value="image/png">PNG</option>
+                    <option value="image/webp">WebP</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Quality</label>
+
+                <select id="quality">
+                    <option value="1">100%</option>
+                    <option value="0.9">90%</option>
+                    <option value="0.8" selected>80%</option>
+                    <option value="0.7">70%</option>
+                    <option value="0.6">60%</option>
+                </select>
+            </div>
+
+        </div>
+
+        <button onclick="resizeImage()">
+            Resize Photo
+        </button>
+
+        <button id="downloadButton"
+                class="download"
+                style="display:none;"
+                onclick="downloadImage()">
+            ⬇ Download Resized Photo
+        </button>
+
+    </div>
+
+    <div class="info">
+        🔒 Your photo is processed in your browser.
+        It is not uploaded to our server.
+    </div>
+
+</div>
+
+</div>
+
+<footer>
+    © 2026 Free Photo Resizer
+</footer>
+
+<canvas id="canvas" style="display:none;"></canvas>
+
+<script>
+
+let originalImage = new Image();
+let resizedData = null;
+
+const imageInput = document.getElementById("imageInput");
+const previewImage = document.getElementById("previewImage");
+const widthInput = document.getElementById("width");
+const heightInput = document.getElementById("height");
+const aspectRatio = document.getElementById("aspectRatio");
+
+imageInput.addEventListener("change", function() {
+
+    const file = this.files[0];
+
+    if (!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event) {
+
+        originalImage.onload = function() {
+
+            widthInput.value = originalImage.width;
+            heightInput.value = originalImage.height;
+
+            previewImage.src = event.target.result;
+            previewImage.style.display = "block";
+
+        };
+
+        originalImage.src = event.target.result;
+    };
+
+    reader.readAsDataURL(file);
+});
+
+
+widthInput.addEventListener("input", function() {
+
+    if (!aspectRatio.checked) return;
+
+    if (!originalImage.width) return;
+
+    const ratio = originalImage.height / originalImage.width;
+
+    heightInput.value = Math.round(widthInput.value * ratio);
+
+});
+
+
+heightInput.addEventListener("input", function() {
+
+    if (!aspectRatio.checked) return;
+
+    if (!originalImage.height) return;
+
+    const ratio = originalImage.width / originalImage.height;
+
+    widthInput.value = Math.round(heightInput.value * ratio);
+
+});
+
+
+function resizeImage() {
+
+    if (!originalImage.src) {
+
+        alert("Please upload a photo first.");
+
+        return;
+    }
+
+    const width = parseInt(widthInput.value);
+    const height = parseInt(heightInput.value);
+
+    if (!width || !height) {
+
+        alert("Please enter width and height.");
+
+        return;
+    }
+
+    const canvas = document.getElementById("canvas");
+
+    canvas.width = width;
+    canvas.height = height;
+
+    const ctx = canvas.getContext("2d");
+
+    ctx.drawImage(
+        originalImage,
+        0,
+        0,
+        width,
+        height
+    );
+
+    const format =
+        document.getElementById("format").value;
+
+    const quality =
+        parseFloat(document.getElementById("quality").value);
+
+    resizedData =
+        canvas.toDataURL(format, quality);
+
+    previewImage.src = resizedData;
+
+    document.getElementById("downloadButton")
+        .style.display = "block";
+}
+
+
+function downloadImage() {
+
+    if (!resizedData) return;
+
+    const format =
+        document.getElementById("format").value;
+
+    let extension = "jpg";
+
+    if (format === "image/png") {
+        extension = "png";
+    }
+
+    if (format === "image/webp") {
+        extension = "webp";
+    }
+
+    const link = document.createElement("a");
+
+    link.download =
+        "resized-photo." + extension;
+
+    link.href = resizedData;
+
+    link.click();
+}
+
+</script>
+
+</body>
+</html>
